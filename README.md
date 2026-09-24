@@ -57,9 +57,9 @@ Detailed annotation rules are available in docs/class_definitions.md.
 
 The exact dataset used by the reproducible notebook is published as a keyless GitHub Release asset:
 
-[Download m4u3-ppe-v3-yolo11.zip](https://github.com/arqmanu/M4U3_ppe-detection-yolov8/releases/download/v1.0/m4u3-ppe-v3-yolo11.zip)
+[Download m4u3-ppe-v3-yolo11.zip](https://github.com/arqmanu/M4U3_pped/v1.0/m4u3-ppe-v3-yolo11.zip
 
-**SHA256:**
+**Package SHA-256:**
 
 ```text
 8bea1dbc79b0493f1ece9394428ad44ab9c38ca5b4341fa078814313693b5d52
