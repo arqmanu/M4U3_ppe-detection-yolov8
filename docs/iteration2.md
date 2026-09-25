@@ -46,7 +46,7 @@ Iteration 1 detects **valid PPE**, but *"no helmet detected"* does not prove tha
 
 The configuration is identical to iteration 1: YOLOv8n from `yolov8n.pt`, 30 epochs, imgsz 640, batch 16, seed 0, Ultralytics 8.2.103. It was trained on 25 Sep 2026 on a Google Colab **CPU**, because the free GPU quota was exhausted. Training took 30.1 min.
 
-- Notebook: [`notebooks/02_Iteration2_Compliance.ipynb`](../notebooks/02_Iteration2_Compliance.ipynb)
+- Notebook: [`notebooks/03_Iteration2_Compliance.ipynb`](../notebooks/03_Iteration2_Compliance.ipynb)
 - Weights: [`best.pt` (Release v2.0)](https://github.com/arqmanu/M4U3_ppe-detection-yolov8/releases/download/v2.0/best.pt), SHA-256 `dc70d91ca09e974c4ff3c62d1796f1929d077cc310c1b29ba12080112d37881f`
 - Curves and confusion matrix: [`results/iteration2/training/`](../results/iteration2/training/)
 

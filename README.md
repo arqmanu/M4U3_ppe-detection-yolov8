@@ -95,7 +95,25 @@ Validation split (27 images, 70 labelled objects), original training run:
 2. **Head protection is precise (0.92) but missed more often (recall 0.86)**, especially small, distant or top-down caps. This is the safety-relevant weakness.
 3. **The open-vest rule is not learned.** An open vest is still accepted as valid (`IMG_3474`, `NEW_open_vest`). Colour and stripes dominate the subtle "is it closed?" cue. One label error was also found (`IMG_3471`). With only 27 validation images, every single error moves the metrics by several points.
 
-**Evidence** (viewable without running anything):
+### Evidence gallery (iteration 1)
+
+**Successful detections**
+
+| <img src="results/evidence/new_images_predictions/IMG_3443.jpg" height="300"> | <img src="results/evidence/validation_predictions/IMG_3410.jpg" height="300"> | <img src="results/evidence/validation_predictions/IMG_3434.jpg" height="300"> |
+|:--:|:--:|:--:|
+| New, unseen photo: cap 0.96, closed vest 0.98 | Side view: cap 0.96, vest 0.96 | Cap found (0.93); red T-shirt correctly **not** taken as a vest |
+
+**Failure analysis** (labels left, predictions right; red = error)
+
+| <img src="results/evidence/error_examples/IMG_3481_labels_vs_pred.jpg" height="260"> | <img src="results/evidence/error_examples/IMG_3433_labels_vs_pred.jpg" height="260"> | <img src="results/evidence/new_images_predictions/NEW_open_vest.jpg" height="260"> |
+|:--:|:--:|:--:|
+| **False positive:** yellow and black floor stripes taken as a vest (0.57). Same colour and stripe pattern, without a person | **False negative:** two distant caps missed. Objects of only a few pixels at 640 px | **False positive:** an **open** vest accepted as valid (0.52). The model learned colour and stripes, not "closed" |
+
+**Training curves** (losses go down, mAP goes up) and **normalised confusion matrix**
+
+<img src="results/training/results.png" width="620"> <img src="results/training/confusion_matrix_normalized.png" width="330">
+
+**More evidence** (all viewable without running anything):
 
 | Evidence | Location |
 |---|---|
@@ -129,7 +147,7 @@ Details: [`docs/error_analysis.md`](docs/error_analysis.md).
 |---|---|---|
 | Classes | 2 (PPE present) | 4 (PPE present **+ violations**) |
 | Roboflow version / Release | v3 / [v1.0](https://github.com/arqmanu/M4U3_ppe-detection-yolov8/releases/tag/v1.0) | v5 / [v2.0](https://github.com/arqmanu/M4U3_ppe-detection-yolov8/releases/tag/v2.0) |
-| Notebook | [`01_Training_Evaluation`](notebooks/01_Training_Evaluation.ipynb) | [`02_Iteration2_Compliance`](notebooks/02_Iteration2_Compliance.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/arqmanu/M4U3_ppe-detection-yolov8/blob/main/notebooks/02_Iteration2_Compliance.ipynb) |
+| Notebook | [`01_Training_Evaluation`](notebooks/01_Training_Evaluation.ipynb) | [`03_Iteration2_Compliance`](notebooks/03_Iteration2_Compliance.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/arqmanu/M4U3_ppe-detection-yolov8/blob/main/notebooks/03_Iteration2_Compliance.ipynb) |
 | mAP50 / P / R (all classes) | 0.923 / 0.833 / 0.897 | 0.905 / 0.809 / 0.782 |
 | `head_protection` recall | 0.860 | 0.713 |
 | `no_high_visibility_clothing` P / R | not available | 0.711 / 0.875 (16 validation examples) |
@@ -143,7 +161,7 @@ Details: [`docs/error_analysis.md`](docs/error_analysis.md).
 
 ## 7. Quick start (how to reproduce)
 
-1. Open [`notebooks/01_Training_Evaluation.ipynb`](notebooks/01_Training_Evaluation.ipynb) with the **Open in Colab** badge.
+1. Open [`notebooks/01_Training_Evaluation.ipynb`](notebooks/01_Training_Evaluation.ipynb) with the **Open in Colab** badge. *(To only **use** the trained models, open [`02_Inference.ipynb`](notebooks/02_Inference.ipynb) instead: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/arqmanu/M4U3_ppe-detection-yolov8/blob/main/notebooks/02_Inference.ipynb), about 1–2 min on CPU.)*
 2. *(Optional)* To re-train, select `Runtime → Change runtime type → T4 GPU`.
 3. Select `Runtime → Disconnect and delete runtime`, then `Runtime → Run all`. Choose *Connect without GPU* if Colab offers it.
 4. Expected outputs:
@@ -214,7 +232,8 @@ For iteration 1, the verification-run values differ from the training-time value
 ├── LICENSE
 ├── notebooks/
 │   ├── 01_Training_Evaluation.ipynb   # iteration 1: baseline, training/verification, evaluation, error evidence
-│   └── 02_Iteration2_Compliance.ipynb # iteration 2: violation classes, iteration 1 vs 2 comparison
+│   ├── 02_Inference.ipynb             # use the published models: COCO baseline vs iteration 1 vs 2, own-photo upload
+│   └── 03_Iteration2_Compliance.ipynb # iteration 2: violation classes, iteration 1 vs 2 comparison
 ├── docs/
 │   ├── class_definitions.md           # label contract + change log
 │   ├── error_analysis.md              # 3 FP, 3 FN, label issues, prioritised improvements
