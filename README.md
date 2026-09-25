@@ -10,6 +10,8 @@ A YOLOv8 object-detection model that pre-screens workplace photographs for **val
 |---|---|---|
 | A PPE detector trained on 134 photos from a real workplace. Iteration 1: 2 PPE classes. [Iteration 2](#6b-iteration-2-compliance-classes): adds explicit violation classes | **mAP50 0.92, precision 0.83, recall 0.90** on the validation split. Main weaknesses: small, distant and crowded workers | Click the Colab badge → `Runtime → Run all`. No account, key or upload is needed ([details](#7-quick-start-how-to-reproduce)) |
 
+**PDF pack:** [Slides (8 pages)](reports/M4U3_PPE_slides.pdf) · [Mini report (2 pages)](reports/M4U3_PPE_mini_report.pdf)
+
 ---
 
 ## 1. Problem and success criteria
@@ -224,7 +226,7 @@ For iteration 1, the verification-run values differ from the training-time value
 │   ├── 03_new_test_images/            # 5 external images (inputs)
 │   ├── evidence/                      # annotations, validation and new-image predictions, error examples
 │   └── iteration2/                    # training outputs + evidence of iteration 2
-└── reports/                           # slides and mini report (PDF)
+└── reports/                           # M4U3_PPE_slides.pdf, M4U3_PPE_mini_report.pdf
 ```
 
 *The notebook is adapted from the Roboflow "train YOLOv8 on a custom dataset" template. Its generic tutorial cells were removed.*
