@@ -1,134 +1,106 @@
 # Error Analysis
 
-## 1. Evaluation Scope
+## 1. Method
 
-The model was evaluated using two sources:
+Errors were identified in two ways:
 
-1. The validation split from the frozen Roboflow dataset.
-2. Five new images that were kept outside the training and validation sets.
+1. **Validation split (27 images).** Section 10 of the notebook compares every prediction (confidence ≥ 0.25) with the ground-truth labels. A prediction and a label match when they have the same class and a box overlap (IoU) of at least 0.5. Unmatched predictions are **false-positive candidates**, and unmatched labels are **false-negative candidates**. Every candidate was then reviewed by eye.
+2. **New images kept outside Roboflow.** Predictions were reviewed visually.
 
-The five external images were:
+Automatic matching on the validation split (verification run, 25 Sep 2026):
 
-- `IMG_3431.jpg`
-- `IMG_3443.jpg`
-- `IMG_3446.jpg`
-- `IMG_3450.jpg`
-- `IMG_3502.jpg`
+| True positives | FP candidates | FN candidates | Images with at least one error |
+|---:|---:|---:|---:|
+| 60 | 10 | 10 | 11 of 27 |
 
-Four external images produced correct results:
+Not every candidate is a real model error. The visual review separated the candidates into four groups:
 
-- `IMG_3431.jpg`
-- `IMG_3443.jpg`
-- `IMG_3450.jpg`
-- `IMG_3502.jpg`
+- **Real false positives.**
+- **Real false negatives.**
+- **Localisation errors:** the object is found, but the box is too loose or too tight to reach IoU 0.5. Examples are `IMG_3480` and `IMG_3499`. These count once as an FP and once as an FN.
+- **Annotation inconsistencies:** the label is wrong and the model is right.
 
-The main external failure case was `IMG_3446.jpg`, a more complex scene containing five people at different positions and distances.
+Side-by-side evidence images (left: labels, right: predictions, red = error) are in [`results/evidence/error_examples/`](../results/evidence/error_examples/). The full table is [`results/evidence/validation_error_table.csv`](../results/evidence/validation_error_table.csv).
 
 ## 2. False Positives
 
-### False Positive 1: Incorrect high-visibility clothing detection in `IMG_3446.jpg`
+### FP1: Yellow and black floor markings detected as `high_visibility_clothing` (`IMG_3481`, confidence 0.57)
+**What:** The model drew a clothing box over the yellow and black hazard stripes painted on the floor.
+**Why (hypothesis):** Floor markings share the two features the model relies on most: saturated safety yellow and parallel stripes. The dataset contains very few floor areas without a label that show this pattern. The model therefore has not learned that the pattern must also appear on a human torso.
 
-The model detected one instance of `high_visibility_clothing` where no valid high-visibility garment was present.
+### FP2: Ordinary red T-shirt detected as `high_visibility_clothing` (`IMG_3495`, confidence 0.35)
+**What:** A worker's plain red T-shirt, without reflective stripes, was boxed as high-visibility clothing.
+**Why (hypothesis):** Many workers in the dataset wear red company T-shirts, often next to valid vests. The low confidence suggests that the model partly associates "upper body of a worker" with the class. It has not yet learned that reflective stripes are the deciding feature. Examples of red shirts without any label (hard negatives) are under-represented.
 
-**Possible cause:** The scene contains several people, partially visible garments, overlapping objects, and visually similar colours. These conditions may have caused the model to associate part of the scene with the colour or shape of valid high-visibility clothing.
-
-### False Positive 2: Unmatched detection in the validation predictions
-
-A bounding box appeared in `val_batch0_pred.jpg` without a corresponding ground-truth box in `val_batch0_labels.jpg`.
-
-**Possible cause:** The object may have shared visual characteristics with one of the PPE classes, such as colour, shape, reflective-looking areas, or partial visibility. The validation montage is too compressed to determine the exact object confidently.
-
-### False Positive 3: Second unmatched detection in the validation predictions
-
-A second predicted bounding box appeared in `val_batch0_pred.jpg` without a corresponding ground-truth annotation in `val_batch0_labels.jpg`.
-
-**Possible cause:** The limited dataset size and the presence of small or distant objects may have encouraged the model to generalize from incomplete visual features. A larger individual-image inspection would be required to identify the precise visual trigger.
+### FP3: Shadow next to a worker's head detected as `head_protection` (`IMG_3488`, confidence 0.37)
+**What:** A second `head_protection` box appeared on the dark area beside a correctly detected cap.
+**Why (hypothesis):** The valid company cap is **dark blue**. At a distance, a dark blob at head height looks like that cap. The class is defined largely by colour and position, so dark shadows near heads are a natural source of confusion.
 
 ## 3. False Negatives
 
-All three documented false negatives occurred in `IMG_3446.jpg`.
+### FN1: Distant workers' head protection missed (`IMG_3433`, 2 missed)
+**What:** Two workers in the background had labelled head protection that was not detected. The worker in the foreground was detected correctly.
+**Why (hypothesis):** At the 640 px training resolution, these caps are only a few pixels wide. Most `head_protection` examples in the training set are close-up, so the model sees few small instances.
 
-### False Negative 1: First missed head protection
+### FN2: Crowded scene, several heads missed (`IMG_3493`, 3 missed)
+**What:** In a scene with several workers at different distances, three labelled heads were missed. Two overlapping, low-confidence vest boxes (0.40–0.41) also appeared.
+**Why (hypothesis):** This scene combines small objects, overlapping people and partial occlusion. It is the same failure pattern observed on the external image `IMG_3446`.
 
-One valid item of head protection was visible but not detected.
+### FN3: Cap seen from above missed (`IMG_3418`)
+**What:** A worker bending over a table shows only the top of the cap. The model did not detect it.
+**Why (hypothesis):** Almost all training examples show the cap from the front or side. A top-down view changes the shape of the object (a round dark disc rather than a cap with a visor).
 
-**Possible cause:** The PPE appeared relatively small within a scene containing several people. Distance and limited pixel detail may have reduced detection confidence.
+## 4. Annotation inconsistencies found
 
-### False Negative 2: Second missed head protection
+The review revealed two cases where the **label**, not the model, was wrong. These cases lower the reported metrics, so the real performance is slightly better than the numbers suggest. They also show that the class definitions need to be clarified.
 
-A second valid item of head protection was visible but not detected.
+| Image | Label | Correct according to the project rules | Effect on metrics |
+|---|---|---|---|
+| `IMG_3471` | Open vest labelled as `high_visibility_clothing` | Open vests must **not** be labelled | Counted as a false negative although the model was right |
+| `IMG_3474` | Red visitor vest with reflective stripes left unlabelled | Confirmed by the project owner as **valid** high-visibility clothing | Counted as a false positive although the model was right |
 
-**Possible cause:** Partial visibility, overlap with other people, viewing angle, or similarity between the dark-blue protective cap and the surrounding background may have made the object difficult to distinguish.
+The red visitor vest (`VISITAS / VISITORS`) was not mentioned in the original class definitions. [`class_definitions.md`](class_definitions.md) has been updated. The frozen dataset (Roboflow version 3) is **not** modified, because the reported results depend on it. The correction is planned for the next dataset version (see Priority 1 below).
 
-### False Negative 3: Missed high-visibility clothing
+## 5. New images kept outside Roboflow
 
-One valid high-visibility garment was visible but not detected.
+Predictions on the new images are in [`results/evidence/new_images_predictions/`](../results/evidence/new_images_predictions/). Single-worker images at short or medium distance were detected correctly, with high confidence (0.89–0.98).
 
-**Possible cause:** The garment was relatively distant or partially visible. The model may not have received enough similar multi-person and long-distance examples during training.
+The weakest result was `IMG_3446`, a crowded scene with four workers at medium distance. The model produced several overlapping and duplicate boxes (`head_protection` 0.43–0.68 and `high_visibility_clothing` 0.49–0.89). The heads of workers looking down were not reliably detected. This is consistent with FN1 and FN2 on the validation split.
 
-## 4. Key Findings
+## 6. Key findings
 
-- The model performed correctly on four of the five external test images.
-- The main difficulties appeared in a crowded scene containing several people and relatively small PPE objects.
-- Head protection was more difficult to detect reliably at a distance.
-- High-visibility clothing generally performed well, but one valid garment was missed and one incorrect garment detection occurred.
-- The validation comparison also revealed two unmatched predictions.
-- The validation set contains only 27 images, so the reported metrics should not be interpreted as proof of production readiness.
+- The model works well for **single, close or medium-distance workers**: precision 0.83, recall 0.90 and mAP50 0.92 on the original validation run.
+- Errors concentrate on **small, distant, top-down or overlapping PPE**, mainly for `head_protection`. Recall for this class is 0.85–0.86, compared with 0.92–0.93 for clothing.
+- **Colour and stripe patterns** drive the false positives: floor markings, red shirts and dark shadows.
+- **Two labelling inconsistencies** were found. Label quality therefore limits the measurable performance as much as the model does.
+- With 27 validation images, each error moves recall by several points. These metrics are indicative only and do not demonstrate production readiness.
 
-## 5. Prioritized Data Improvements
+## 7. Prioritized data improvements
 
-### Priority 1: Add more crowded and distant scenes
+### Priority 1: Fix the label contract and relabel (quick, high impact)
+- Add the red visitor vest to the class definitions (done) and label it in all images.
+- Audit all `high_visibility_clothing` labels and remove the labels on open vests (`IMG_3471` and any similar cases).
+- Publish the result as a new Roboflow version and a new GitHub Release. Keep version 3 frozen as the baseline.
 
-Collect and annotate more images containing:
+*Tied to:* Section 4. Label noise directly distorts both training and evaluation.
 
-- Four or more people.
-- People at different distances.
-- Partially overlapping people.
-- Small PPE objects.
-- Different camera angles.
+### Priority 2: Add small, distant, crowded and top-down PPE examples
+- Take 30–50 new photos with **3 or more workers** at 5–15 m, including people bending over or seen from above.
+- Label every visible valid cap and vest, even small ones, so that the model learns small instances.
 
-This directly targets the failures observed in `IMG_3446.jpg`.
+*Tied to:* FN1, FN2, FN3 and `IMG_3446`. `head_protection` recall is the weakest metric.
 
-### Priority 2: Add hard negative examples
+### Priority 3: Add hard negative examples (images left unlabelled on purpose)
+- Floor hazard markings, yellow or orange equipment, forklifts and pallets.
+- Red company T-shirts and other clothing without reflective stripes.
+- Dark shadows and ordinary caps at head height.
 
-Add more images containing visually similar but invalid objects, including:
+*Tied to:* FP1, FP2 and FP3.
 
-- Ordinary coloured clothing.
-- Yellow or orange objects without reflective stripes.
-- Open high-visibility vests.
-- Ordinary caps.
-- Background objects with colours or shapes similar to PPE.
+After these changes, the model should be retrained with the same parameters (YOLOv8n, 30 epochs, imgsz 640, batch 16) and compared on the same validation and external images. The goal is to check whether false negatives decrease without an increase in false positives.
 
-These images should remain unlabelled so that the model learns not to classify them as valid PPE.
+## 8. Safety interpretation
 
-### Priority 3: Improve class balance and PPE variety
-
-Collect additional examples of underrepresented valid PPE, especially:
-
-- White construction helmets.
-- Dark-blue protective caps at longer distances.
-- Orange high-visibility clothing.
-- Yellow-and-grey reflective fleece garments.
-- Valid garments viewed from the side and back.
-
-The white construction helmet is represented by only one image, so the current model cannot be assumed to generalize reliably to that PPE type.
-
-## 6. Iteration Plan
-
-A future dataset version should:
-
-1. Preserve the current dataset as a frozen baseline.
-2. Add targeted images based on the documented failures.
-3. Maintain consistent annotation rules.
-4. Keep external test images separate from training and validation.
-5. Train a new model using the same principal parameters.
-6. Compare the new model against the current baseline using the same evaluation images.
-7. Report whether false negatives decrease without creating an unacceptable increase in false positives.
-
-## 7. Safety Interpretation
-
-For this PPE-screening use case, false negatives are considered more consequential than false positives because missed PPE may produce misleading safety information.
-
-However, the model must not make safety or disciplinary decisions automatically.
+For PPE screening, a **false negative** (PPE present but not detected) is treated as more consequential than a false positive. It produces misleading safety information, and in this project's error profile it is the more frequent error for `head_protection`. False positives mainly cost reviewer time.
 
 **This model is an assistive tool for preliminary screening only. It produces false negatives and false positives. It must not be used as the sole verifier for life-safety decisions.**
