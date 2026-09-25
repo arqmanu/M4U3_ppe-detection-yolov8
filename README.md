@@ -57,9 +57,50 @@ Detailed annotation rules are available in docs/class_definitions.md.
 
 The exact dataset used by the reproducible notebook is published as a keyless GitHub Release asset:
 
-[Download m4u3-ppe-v3-yolo11.zip](https://github.com/arqmanu/M4U3_pped/v1.0/m4u3-ppe-v3-yolo11.zip
+[Download m4u3-ppe-v3-yolo11.zip](https://github.com/arqmanu/M4U3_ppe-detection-yolov8/releases/download/v1.0/m4u3-ppe-v3-yolo11.zip)
 
 **Package SHA-256:**
 
 ```text
 8bea1dbc79b0493f1ece9394428ad44ab9c38ca5b4341fa078814313693b5d52
+
+## Model Configuration
+
+- **Model:** YOLOv8n
+- **Ultralytics version:** 8.2.103
+- **Epochs:** 30
+- **Image size:** 640
+- **Batch size:** 16
+- **Pretrained weights:** `yolov8n.pt`
+- **Optimizer:** Auto, resolved to AdamW during training
+- **Random seed:** 0
+- **Training environment:** Google Colab
+- **GPU used:** Tesla T4
+
+## Results
+
+### Overall Validation Metrics
+
+| Metric | Result |
+|---|---:|
+| Precision | 0.833 |
+| Recall | 0.897 |
+| mAP50 | 0.923 |
+| mAP50-95 | 0.717 |
+
+### Results by Class
+
+| Class | Precision | Recall | mAP50 | mAP50-95 |
+|---|---:|---:|---:|---:|
+| `head_protection` | 0.920 | 0.860 | 0.898 | 0.646 |
+| `high_visibility_clothing` | 0.746 | 0.933 | 0.947 | 0.789 |
+
+### Key Findings
+
+- High-visibility clothing achieved the highest recall and mAP.
+- Head protection was more difficult to detect at longer distances.
+- Four of the five external test images produced correct detections.
+- The complex multi-person image `IMG_3446.jpg` produced missed detections and one incorrect clothing detection.
+- The validation set contains only 27 images, so these metrics do not demonstrate production readiness.
+
+Training curves, confusion matrices and prediction examples are available in the results/ folder.
