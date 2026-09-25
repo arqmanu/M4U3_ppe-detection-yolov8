@@ -210,6 +210,8 @@ Last successful fresh-runtime `Run all` from GitHub:
 - Metrics: P 0.809 · R 0.782 · mAP50 0.905 · mAP50-95 0.650.
 - **Fresh-runtime `Run all` verification (2026-09-25 14:38 UTC):** published iteration-2 weights loaded from Release v2.0 (SHA-256 checked); Colab CPU; total runtime 0.7 min. It gave identical metrics: P 0.809 · R 0.782 · mAP50 0.905 · mAP50-95 0.650.
 
+**Inference notebook** (`02_Inference.ipynb`), fresh `Run all` on 25 Sep 2026: both published weights files verified with SHA-256; 15 prediction images (COCO baseline, iteration 1 and iteration 2 on the 5 new images) in 1.2 min on a Colab Tesla T4.
+
 For iteration 1, the verification-run values differ from the training-time values by at most 0.014. That is expected: a stand-alone validation batches images differently from the validation that runs at the end of training, and it runs on CPU instead of GPU.
 
 ## 8. Governance and limitations
