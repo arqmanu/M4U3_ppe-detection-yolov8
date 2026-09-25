@@ -174,7 +174,7 @@ No Roboflow account, API key, Colab Secrets, Google Drive or manual upload is re
 - [x] Ultralytics pinned: `8.2.103` (installed with `--no-deps` to keep Colab's NumPy 2 working)
 - [x] Weights published with SHA-256 (`best.pt`, Release v1.0)
 - [x] Fresh-runtime `Run all` completed (see proof below)
-- [x] Iteration 2: dataset Roboflow v5 (Release v2.0, SHA-256), same model, epochs, batch, imgsz and seed; weights published
+- [x] Iteration 2: dataset Roboflow v5 (Release v2.0, SHA-256), same model, epochs, batch, imgsz and seed; weights published; fresh-runtime `Run all` verified
 
 ### Reproducibility proof
 Last successful fresh-runtime `Run all` from GitHub:
@@ -190,7 +190,7 @@ Last successful fresh-runtime `Run all` from GitHub:
 - Full training run on Google Colab **CPU** (x86_64); Python 3.13.15, PyTorch 2.11.0+cpu, Ultralytics 8.2.103.
 - Training time: 30.1 min.
 - Metrics: P 0.809 · R 0.782 · mAP50 0.905 · mAP50-95 0.650.
-- Later runs without a GPU download the published iteration-2 weights from Release v2.0 instead of training.
+- **Fresh-runtime `Run all` verification (2026-09-25 14:38 UTC):** published iteration-2 weights loaded from Release v2.0 (SHA-256 checked); Colab CPU; total runtime 0.7 min. It gave identical metrics: P 0.809 · R 0.782 · mAP50 0.905 · mAP50-95 0.650.
 
 For iteration 1, the verification-run values differ from the training-time values by at most 0.014. That is expected: a stand-alone validation batches images differently from the validation that runs at the end of training, and it runs on CPU instead of GPU.
 
