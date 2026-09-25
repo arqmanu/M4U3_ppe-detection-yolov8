@@ -8,7 +8,7 @@ A YOLOv8 object-detection model that pre-screens workplace photographs for **val
 
 | What is this? | Does it work? | How do I run it? |
 |---|---|---|
-| A 2-class PPE detector (head protection and high-visibility clothing) trained on 134 photos from a real workplace | **mAP50 0.92, precision 0.83, recall 0.90** on the validation split. Main weaknesses: small, distant and crowded workers | Click the Colab badge → `Runtime → Run all`. No account, key or upload is needed ([details](#how-to-reproduce)) |
+| A 2-class PPE detector (head protection and high-visibility clothing) trained on 134 photos from a real workplace | **mAP50 0.92, precision 0.83, recall 0.90** on the validation split. Main weaknesses: small, distant and crowded workers | Click the Colab badge → `Runtime → Run all`. No account, key or upload is needed ([details](#7-quick-start-how-to-reproduce)) |
 
 ---
 
@@ -119,7 +119,7 @@ Validation split (27 images, 70 labelled objects), original training run:
 
 Details: [`docs/error_analysis.md`](docs/error_analysis.md).
 
-## 7. How to reproduce
+## 7. Quick start (how to reproduce)
 
 1. Open [`notebooks/01_Training_Evaluation.ipynb`](notebooks/01_Training_Evaluation.ipynb) with the **Open in Colab** badge.
 2. *(Optional)* To re-train, select `Runtime → Change runtime type → T4 GPU`.
@@ -175,7 +175,7 @@ These values differ from the training-time values by at most 0.014. That is expe
 ## 9. Licensing and data rights
 
 - **Code and notebooks:** [MIT License](LICENSE).
-- **Dataset images and labels:** CC BY 4.0, the same license as on Roboflow Universe. The photos were taken by the author at their workplace. The people shown gave written consent, and faces were obscured before publication.
+- **Dataset images and labels:** CC BY 4.0, the same license as on Roboflow Universe. The photos were taken by the author at their workplace. The people shown gave written consent to publication. Faces were obscured in most images; a few profile or partial faces remain visible and are covered by that consent.
 - **Model weights:** released for academic reproducibility. Note that Ultralytics YOLOv8 itself is licensed under AGPL-3.0.
 
 ## 10. Repository structure
