@@ -36,13 +36,13 @@
 - for automated disciplinary decisions, worker surveillance or identification;
 - on crowded scenes, distant workers (more than about 10 m) or top-down camera views, where most observed errors occur;
 - on PPE types or sites that are not represented in the dataset (e.g. boots, glasses, harnesses, other companies' uniforms, outdoor construction sites, night or rain);
-- as if it detected *non-compliance*. It detects *valid PPE*. Absence of a detection does **not** prove that PPE is missing. A follow-up iteration with explicit `person_no_helmet` / `person_no_vest` classes is planned to address this.
+- as if it detected *non-compliance*. It detects *valid PPE*. Absence of a detection does **not** prove that PPE is missing. Iteration 2 adds explicit `no_head_protection` / `no_high_visibility_clothing` classes ([`iteration2.md`](iteration2.md)). It is a proof of concept only: the violation classes are rare and their recall is not yet reliable.
 
 **Known dataset limits:**
 - 134 images from a single site.
 - 27 validation images, so metrics move by several points per error.
 - White helmets appear in only one image.
-- Two annotation inconsistencies were found and documented in [`error_analysis.md`](error_analysis.md).
+- One annotation inconsistency was found, and the open-vest rule is not learned reliably (see [`error_analysis.md`](error_analysis.md)).
 
 ## 5. Risk Statement
 
@@ -58,7 +58,7 @@
 ## 7. Project-Specific Label Rules
 
 - **Open high-visibility vests are not labelled.** This is a deliberate academic decision that distinguishes *wearing a garment* from *wearing it correctly*. It is not a general legal rule.
-- The **red visitor vest with reflective stripes** is valid high-visibility clothing (clarified after the error analysis; see the change log in [`class_definitions.md`](class_definitions.md)).
+- The **red visitor vest with reflective stripes** is valid high-visibility clothing **when closed** (clarified after the error analysis; see the change log in [`class_definitions.md`](class_definitions.md)).
 
 ## 8. License
 

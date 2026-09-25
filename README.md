@@ -8,7 +8,7 @@ A YOLOv8 object-detection model that pre-screens workplace photographs for **val
 
 | What is this? | Does it work? | How do I run it? |
 |---|---|---|
-| A 2-class PPE detector (head protection and high-visibility clothing) trained on 134 photos from a real workplace | **mAP50 0.92, precision 0.83, recall 0.90** on the validation split. Main weaknesses: small, distant and crowded workers | Click the Colab badge → `Runtime → Run all`. No account, key or upload is needed ([details](#7-quick-start-how-to-reproduce)) |
+| A PPE detector trained on 134 photos from a real workplace. Iteration 1: 2 PPE classes. [Iteration 2](#6b-iteration-2-compliance-classes): adds explicit violation classes | **mAP50 0.92, precision 0.83, recall 0.90** on the validation split. Main weaknesses: small, distant and crowded workers | Click the Colab badge → `Runtime → Run all`. No account, key or upload is needed ([details](#7-quick-start-how-to-reproduce)) |
 
 ---
 
@@ -22,7 +22,7 @@ A YOLOv8 object-detection model that pre-screens workplace photographs for **val
 |---|---|---|---|
 | Recall for each class on the validation split (missed PPE is the costly error) | ≥ 0.85 | 0.86 (head) / 0.93 (clothing) | ✅ |
 | mAP50, all classes | ≥ 0.80 | 0.92 | ✅ |
-| Correct detections on single workers in new, unseen photos | Qualitative | Yes (confidence 0.89–0.98) | ✅ |
+| Correct detections on single workers in new, unseen photos | Qualitative | Yes for closed PPE (0.89–0.98); **no** for the open-vest test photo | ⚠️ |
 | Reliable on crowded or distant scenes | Qualitative | **No** (see [error analysis](docs/error_analysis.md)) | ❌ |
 
 ## 2. Classes and label rules
@@ -30,7 +30,7 @@ A YOLOv8 object-detection model that pre-screens workplace photographs for **val
 | Class | Label (valid PPE) | Do **not** label |
 |---|---|---|
 | `head_protection` | Company dark-blue protective cap; construction safety helmet (including white) | Ordinary caps |
-| `high_visibility_clothing` | **Closed** yellow or orange vest with reflective stripes; yellow-grey reflective fleece; red visitor vest with reflective stripes* | **Open vests** (project rule), red company T-shirts, clothing without reflective stripes |
+| `high_visibility_clothing` | **Closed** yellow or orange vest with reflective stripes; yellow-grey reflective fleece; closed red visitor vest with reflective stripes* | **Open vests** (project rule), red company T-shirts, clothing without reflective stripes |
 
 *Added after the error analysis (see the change log in the class definitions).
 
@@ -91,7 +91,7 @@ Validation split (27 images, 70 labelled objects), original training run:
 
 1. **Clothing is found reliably (recall 0.93) but over-detected (precision 0.75).** Floor hazard stripes and red shirts are mistaken for vests.
 2. **Head protection is precise (0.92) but missed more often (recall 0.86)**, especially small, distant or top-down caps. This is the safety-relevant weakness.
-3. **Label quality matters as much as the model.** The error review found two annotation inconsistencies where the model was right and the label was wrong. With only 27 validation images, every single error moves the metrics by several points.
+3. **The open-vest rule is not learned.** An open vest is still accepted as valid (`IMG_3474`, `NEW_open_vest`). Colour and stripes dominate the subtle "is it closed?" cue. One label error was also found (`IMG_3471`). With only 27 validation images, every single error moves the metrics by several points.
 
 **Evidence** (viewable without running anything):
 
@@ -108,9 +108,9 @@ Validation split (27 images, 70 labelled objects), original training run:
 
 | Type | Examples | Probable cause |
 |---|---|---|
-| False positives | Floor hazard stripes, red T-shirt, shadow beside a head | Colour and stripe patterns without the context of a person; few hard negatives |
+| False positives | Floor hazard stripes, red T-shirt, shadow beside a head, **open vests accepted as valid** | Colour and stripe patterns dominate; few hard negatives and few open-vest examples |
 | False negatives | Distant heads (×5), cap seen from above | Few small or top-down examples at 640 px |
-| Label issues | Open vest labelled; red visitor vest not labelled | Class contract was incomplete, so it was updated |
+| Label issues | Open vest labelled (`IMG_3471`); red visitor vest missing from the rules | Class contract was incomplete, so it was updated and fixed in iteration 2 |
 
 **Next data improvements (prioritised):**
 1. Fix the label contract and relabel.
@@ -118,6 +118,26 @@ Validation split (27 images, 70 labelled objects), original training run:
 3. Add hard negatives (floor markings, red shirts, shadows).
 
 Details: [`docs/error_analysis.md`](docs/error_analysis.md).
+
+## 6b. Iteration 2: compliance classes
+
+**Why:** *"No helmet detected"* does not prove *"no helmet worn"*. Following the course feedback, two explicit **violation classes** were added: `no_head_protection` (head box) and `no_high_visibility_clothing` (torso box, including **open** vests). Same images, same split, same training recipe. Details: [`docs/iteration2.md`](docs/iteration2.md).
+
+| | Iteration 1 | Iteration 2 |
+|---|---|---|
+| Classes | 2 (PPE present) | 4 (PPE present **+ violations**) |
+| Roboflow version / Release | v3 / [v1.0](https://github.com/arqmanu/M4U3_ppe-detection-yolov8/releases/tag/v1.0) | v5 / [v2.0](https://github.com/arqmanu/M4U3_ppe-detection-yolov8/releases/tag/v2.0) |
+| Notebook | [`01_Training_Evaluation`](notebooks/01_Training_Evaluation.ipynb) | [`02_Iteration2_Compliance`](notebooks/02_Iteration2_Compliance.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/arqmanu/M4U3_ppe-detection-yolov8/blob/main/notebooks/02_Iteration2_Compliance.ipynb) |
+| mAP50 / P / R (all classes) | 0.923 / 0.833 / 0.897 | 0.905 / 0.809 / 0.782 |
+| `head_protection` recall | 0.860 | 0.713 |
+| `no_high_visibility_clothing` P / R | not available | 0.711 / 0.875 (16 validation examples) |
+| `no_head_protection` P / R | not available | 1.000 / 0.645 (**only 3 validation examples**) |
+| Red-shirt driver (`IMG_3431`) | Cap only | **Flags the missing vest** ✅ |
+| Open-vest test photo | Wrongly accepts the vest ❌ | No longer accepts it, but does not flag the violation ⚠️ |
+
+**Takeaway:** iteration 2 answers the right business question and can flag a missing vest. However, violations are rare in this compliant workplace (23 `no_head_protection` examples), and the shared classes lost recall. **Iteration 1 remains the better PPE detector. Iteration 2 is a proof of concept for compliance detection.** Next step: actively stage violation photos (bare heads, open vests) to balance the classes.
+
+**SAM 3 exploration:** SAM 3 (Roboflow *Find Objects with AI*) was tested for the new classes. It segments people very well, but it cannot express *"without a vest"*: it also selected a worker who was wearing one. It was not used for labelling. See [`docs/sam_exploration.md`](docs/sam_exploration.md).
 
 ## 7. Quick start (how to reproduce)
 
@@ -152,6 +172,7 @@ No Roboflow account, API key, Colab Secrets, Google Drive or manual upload is re
 - [x] Ultralytics pinned: `8.2.103` (installed with `--no-deps` to keep Colab's NumPy 2 working)
 - [x] Weights published with SHA-256 (`best.pt`, Release v1.0)
 - [x] Fresh-runtime `Run all` completed (see proof below)
+- [x] Iteration 2: dataset Roboflow v5 (Release v2.0, SHA-256), same model, epochs, batch, imgsz and seed; weights published
 
 ### Reproducibility proof
 Last successful fresh-runtime `Run all` from GitHub:
@@ -163,7 +184,13 @@ Last successful fresh-runtime `Run all` from GitHub:
 - **Total notebook runtime:** 1.6 min
 - **Validation metrics:** P 0.835 · R 0.883 · mAP50 0.922 · mAP50-95 0.716
 
-These values differ from the training-time values by at most 0.014. That is expected: a stand-alone validation batches images differently from the validation that runs at the end of training, and it runs on CPU instead of GPU.
+**Iteration 2** (notebook 02), run on 2026-09-25 14:08 UTC:
+- Full training run on Google Colab **CPU** (x86_64); Python 3.13.15, PyTorch 2.11.0+cpu, Ultralytics 8.2.103.
+- Training time: 30.1 min.
+- Metrics: P 0.809 · R 0.782 · mAP50 0.905 · mAP50-95 0.650.
+- Later runs without a GPU download the published iteration-2 weights from Release v2.0 instead of training.
+
+For iteration 1, the verification-run values differ from the training-time values by at most 0.014. That is expected: a stand-alone validation batches images differently from the validation that runs at the end of training, and it runs on CPU instead of GPU.
 
 ## 8. Governance and limitations
 
@@ -184,15 +211,19 @@ These values differ from the training-time values by at most 0.014. That is expe
 ├── README.md
 ├── LICENSE
 ├── notebooks/
-│   └── 01_Training_Evaluation.ipynb   # baseline, training/verification, evaluation, error evidence
+│   ├── 01_Training_Evaluation.ipynb   # iteration 1: baseline, training/verification, evaluation, error evidence
+│   └── 02_Iteration2_Compliance.ipynb # iteration 2: violation classes, iteration 1 vs 2 comparison
 ├── docs/
 │   ├── class_definitions.md           # label contract + change log
 │   ├── error_analysis.md              # 3 FP, 3 FN, label issues, prioritised improvements
-│   └── governance_checklist.md        # privacy, minimisation, limitations, risk
+│   ├── governance_checklist.md        # privacy, minimisation, limitations, risk
+│   ├── iteration2.md                  # compliance classes: design, results, errors, next steps
+│   └── sam_exploration.md             # SAM 3 test: what helped, what failed
 ├── results/
 │   ├── training/                      # curves, confusion matrix, results.csv, args.yaml
 │   ├── 03_new_test_images/            # 5 external images (inputs)
-│   └── evidence/                      # annotations, validation and new-image predictions, error examples
+│   ├── evidence/                      # annotations, validation and new-image predictions, error examples
+│   └── iteration2/                    # training outputs + evidence of iteration 2
 └── reports/                           # slides and mini report (PDF)
 ```
 

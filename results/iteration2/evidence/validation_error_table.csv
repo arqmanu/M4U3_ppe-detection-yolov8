@@ -1,0 +1,28 @@
+image,labels,predictions,TP,FP,FN,FP classes,FN classes
+Copia-de-IMG_3410,2,2,2,0,0,,
+Copia-de-IMG_3411,2,2,2,0,0,,
+Copia-de-IMG_3418,4,2,2,0,2,,"head_protection, head_protection"
+Copia-de-IMG_3419,5,4,3,1,2,high_visibility_clothing (0.91),"high_visibility_clothing, head_protection"
+Copia-de-IMG_3433,5,3,3,0,2,,"head_protection, head_protection"
+Copia-de-IMG_3434,2,1,1,0,1,,head_protection
+Copia-de-IMG_3444,9,2,2,0,7,,"high_visibility_clothing, high_visibility_clothing, high_visibility_clothing, head_protection, head_protection, head_protection, head_protection"
+Copia-de-IMG_3462,2,1,1,0,1,,no_head_protection
+Copia-de-IMG_3471,2,2,0,2,2,"high_visibility_clothing (0.90), high_visibility_clothing (0.39)","no_high_visibility_clothing, no_head_protection"
+Copia-de-IMG_3474,2,1,0,1,2,high_visibility_clothing (0.31),"no_head_protection, no_high_visibility_clothing"
+Copia-de-IMG_3477,2,2,2,0,0,,
+Copia-de-IMG_3480,3,2,2,0,1,,high_visibility_clothing
+Copia-de-IMG_3481,2,2,2,0,0,,
+Copia-de-IMG_3484,5,6,5,1,0,high_visibility_clothing (0.28),
+Copia-de-IMG_3488,2,1,1,0,1,,head_protection
+Copia-de-IMG_3492,2,1,1,0,1,,no_high_visibility_clothing
+Copia-de-IMG_3493,10,5,5,0,5,,"head_protection, head_protection, head_protection, head_protection, no_high_visibility_clothing"
+Copia-de-IMG_3495,2,1,1,0,1,,no_high_visibility_clothing
+Copia-de-IMG_3499,4,2,2,0,2,,"head_protection, no_high_visibility_clothing"
+Copia-de-IMG_3502,4,4,4,0,0,,
+Copia-de-IMG_3504,4,4,4,0,0,,
+Copia-de-IMG_3513,2,1,1,0,1,,no_high_visibility_clothing
+Copia-de-IMG_3517,4,4,4,0,0,,
+Copia-de-IMG_3520,2,2,2,0,0,,
+Copia-de-IMG_3523,2,2,2,0,0,,
+Copia-de-IMG_3546,1,1,1,0,0,,
+Copia-de-IMG_3551,2,1,1,0,1,,head_protection

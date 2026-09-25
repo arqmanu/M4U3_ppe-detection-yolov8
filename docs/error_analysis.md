@@ -52,35 +52,38 @@ Side-by-side evidence images (left: labels, right: predictions, red = error) are
 
 ## 4. Annotation inconsistencies found
 
-The review revealed two cases where the **label**, not the model, was wrong. These cases lower the reported metrics, so the real performance is slightly better than the numbers suggest. They also show that the class definitions need to be clarified.
+The review found one case where the **label**, not the model, was wrong. A second case turned out, on closer inspection, to be a real model error.
 
-| Image | Label | Correct according to the project rules | Effect on metrics |
+| Image | Label in v3 | Finding | Effect on metrics |
 |---|---|---|---|
-| `IMG_3471` | Open vest labelled as `high_visibility_clothing` | Open vests must **not** be labelled | Counted as a false negative although the model was right |
-| `IMG_3474` | Red visitor vest with reflective stripes left unlabelled | Confirmed by the project owner as **valid** high-visibility clothing | Counted as a false positive although the model was right |
+| `IMG_3471` | Open vest labelled as `high_visibility_clothing` | **Label error.** Open vests must not be labelled | Counted as a false negative although the model was right |
+| `IMG_3474` | Red visitor vest left unlabelled | First read as a missing label. During the iteration-2 relabelling it was re-checked: **the vest is worn open**, so the v3 label (none) was **correct** | This is a genuine false positive: the model accepted an **open** vest as valid |
 
-The red visitor vest (`VISITAS / VISITORS`) was not mentioned in the original class definitions. [`class_definitions.md`](class_definitions.md) has been updated. The frozen dataset (Roboflow version 3) is **not** modified, because the reported results depend on it. The correction is planned for the next dataset version (see Priority 1 below).
+The red visitor vest (`VISITAS / VISITORS`) was not covered by the original class definitions. It is now defined as valid **when closed** (see [`class_definitions.md`](class_definitions.md)). The frozen dataset (Roboflow version 3) is **not** modified, because the reported results depend on it. The fixes were applied in the iteration-2 dataset (Roboflow version 5, see [`iteration2.md`](iteration2.md)).
 
 ## 5. New images kept outside Roboflow
 
-Predictions on the new images are in [`results/evidence/new_images_predictions/`](../results/evidence/new_images_predictions/). Single-worker images at short or medium distance were detected correctly, with high confidence (0.89–0.98).
+Predictions on the new images are in [`results/evidence/new_images_predictions/`](../results/evidence/new_images_predictions/). Single-worker images with closed PPE (`IMG_3431`, `IMG_3443`, `IMG_3450`) were detected correctly, with high confidence (0.89–0.98).
 
-The weakest result was `IMG_3446`, a crowded scene with four workers at medium distance. The model produced several overlapping and duplicate boxes (`head_protection` 0.43–0.68 and `high_visibility_clothing` 0.49–0.89). The heads of workers looking down were not reliably detected. This is consistent with FN1 and FN2 on the validation split.
+- **`NEW_open_vest.jpg`** was taken specifically to test the open-vest rule. The model **wrongly accepted the open vest** as `high_visibility_clothing` (0.52). Together with `IMG_3474`, this shows that iteration 1 has **not learned the open-vest rule**. The garment's colour and stripes dominate, and whether it is closed is a subtle cue that is seen in few examples.
+- The weakest result was `IMG_3446`, a crowded scene with four workers at medium distance. The model produced several overlapping and duplicate boxes (`head_protection` 0.43–0.68 and `high_visibility_clothing` 0.49–0.89). The heads of workers looking down were not reliably detected. This is consistent with FN1 and FN2 on the validation split.
 
 ## 6. Key findings
 
 - The model works well for **single, close or medium-distance workers**: precision 0.83, recall 0.90 and mAP50 0.92 on the original validation run.
 - Errors concentrate on **small, distant, top-down or overlapping PPE**, mainly for `head_protection`. Recall for this class is 0.85–0.86, compared with 0.92–0.93 for clothing.
 - **Colour and stripe patterns** drive the false positives: floor markings, red shirts and dark shadows.
-- **Two labelling inconsistencies** were found. Label quality therefore limits the measurable performance as much as the model does.
+- **The open-vest rule is not learned**: an open vest is accepted as valid (`IMG_3474`, `NEW_open_vest`).
+- **One labelling inconsistency** was found (`IMG_3471`). Label quality directly limits the measurable performance.
 - With 27 validation images, each error moves recall by several points. These metrics are indicative only and do not demonstrate production readiness.
 
 ## 7. Prioritized data improvements
 
 ### Priority 1: Fix the label contract and relabel (quick, high impact)
-- Add the red visitor vest to the class definitions (done) and label it in all images.
+- Define the red visitor vest (valid when closed) in the class contract (done).
 - Audit all `high_visibility_clothing` labels and remove the labels on open vests (`IMG_3471` and any similar cases).
 - Publish the result as a new Roboflow version and a new GitHub Release. Keep version 3 frozen as the baseline.
+- **Status:** done in iteration 2 (Roboflow version 5, Release v2.0), together with explicit violation classes. See [`iteration2.md`](iteration2.md).
 
 *Tied to:* Section 4. Label noise directly distorts both training and evaluation.
 
